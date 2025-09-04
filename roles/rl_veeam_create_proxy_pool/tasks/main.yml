@@ -1,3 +1,60 @@
 ---
 # tasks file for rl_ansible_role_name
 
+- name: Authenticate with VSPC API to get access token
+  ansible.builtin.uri:
+    url: '{{ veeam_backup_server_api_url }}:4443/v8/token'
+    validate_certs: false
+    method: POST
+    body:
+      grant_type: 'password'
+      disable_antiforgery_token: true
+      username: '{{ windows_local_admin_new_vm_username }}'
+      password: '{{ windows_local_admin_new_vm_password }}'
+    body_format: form-urlencoded
+    headers:
+      Content-Type: 'application/x-www-form-urlencoded'
+    return_content: yes
+    status_code: 200
+  register: auth_response
+  delegate_to: localhost
+  no_log: false
+
+- name: Set access token as a temporary fact for this playbook run
+  ansible.builtin.set_fact:
+    access_token: '{{ auth_response.json.access_token }}'
+
+- name: Install Veeam Proxy Components via REST API
+  ansible.builtin.uri:
+    url: '{{ veeam_backup_server_api_url }}:4443/v8/ProxyPool'
+    validate_certs: false
+    method: POST
+    body_format: json
+    body:
+      useDomainNetwork: true
+      useInternetProxy: false
+      operatingSystem: "Windows"
+      id: "00000000-0000-0000-0000-000000000000"
+      hostName: "{{ veeam_backup_proxies.ip }}"
+      description: "{{ veeam_backup_proxies.description }}"
+      port: 9193
+      username: "{{ windows_local_admin_new_vm_username }}"
+      password: "{{ windows_local_admin_new_vm_password }}"
+      serviceAccountName: "{{ veeam_service_account_username }}"
+      serviceAccountPassword: "{{ veeam_service_account_password }}"
+      createServiceAccount: true
+      enableNetworkThrottling: false
+      attachUsedProxy: false
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ access_token }}"
+    status_code: [200,201,409,-1]
+    timeout: "200"
+  register: proxy_install_result
+  ignore_errors: true
+  delegate_to: localhost
+  no_log: false
+  failed_when: >
+    proxy_install_result.status not in [200, 201, 409]
+  changed_when: >
+    proxy_install_result.status in [200, 201,-1]
