@@ -85,7 +85,7 @@
     headers:
       Content-Type: "application/json"
       Authorization: "Bearer {{ access_token }}"
-    status_code: [200, 201, 204, 409]  # 204 hinzufügen, -1 entfernen
+    status_code: [200, 201, 204, 409]
     timeout: 200
     return_content: true
   register: proxy_add_result
@@ -93,5 +93,4 @@
   failed_when: >
     proxy_add_result.status not in [200, 201, 204, 409] or
     (proxy_add_result.status == 409 and 'already exists' not in (proxy_add_result.json.message | default(proxy_add_result.content | default(''))))
-  changed_when: >
-    proxy_add_result.status in [200, 201, 204]  # 204 als "changed" markieren
+  changed_when: proxy_add_result.status in [200, 201, 204]
