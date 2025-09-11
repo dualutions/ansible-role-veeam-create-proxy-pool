@@ -4,6 +4,7 @@
 - name: Create Veeam Proxy Pool
   hosts: all
   gather_facts: false
+  serial: 1
   
   roles:
     - rl_veeam_create_proxy_pool
