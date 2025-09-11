@@ -40,7 +40,7 @@
     headers:
       Content-Type: "application/json"
       Authorization: "Bearer {{ access_token }}"
-    return_content: true  # Wichtig: Response-Inhalt zurückgeben
+    return_content: true
   register: proxy_install_result
   ignore_errors: false
   delegate_to: localhost
