@@ -31,20 +31,10 @@
     method: POST
     body_format: json
     body:
-      useDomainNetwork: true
-      useInternetProxy: false
-      operatingSystem: "Windows"
-      id: "00000000-0000-0000-0000-000000000000"
-      hostName: "{{ veeam_backup_proxies.ip }}"
-      description: "{{ veeam_backup_proxies.description }}"
-      port: 9193
-      username: "{{ windows_local_admin_new_vm_username }}"
-      password: "{{ windows_local_admin_new_vm_password }}"
-      serviceAccountName: "{{ veeam_service_account_username }}"
-      serviceAccountPassword: "{{ veeam_service_account_password }}"
-      createServiceAccount: true
-      enableNetworkThrottling: false
-      attachUsedProxy: false
+      name: "{{ veeam_backup_proxy_pool.name }}"
+      description: "{{ veeam_backup_proxy_pool.description }}"
+      proxyIds:
+        - proxyId: "{{ veeam_proxy_server_uids }}"
     headers:
       Content-Type: "application/json"
       Authorization: "Bearer {{ access_token }}"
@@ -57,4 +47,4 @@
   failed_when: >
     proxy_install_result.status not in [200, 201, 409]
   changed_when: >
-    proxy_install_result.status in [200, 201,-1]
+    proxy_install_result.status in [200, 201, 409, -1]
