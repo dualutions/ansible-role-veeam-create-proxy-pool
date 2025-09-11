@@ -74,7 +74,7 @@
   set_fact:
     veeam_backup_proxy_pool_id: "{{ veeam_get_proxy_pool_uids.json.results | selectattr('name', 'equalto', veeam_backup_proxy_pool.name) | map(attribute='id') | first }}"
 
-- name: Add second Veeam M365 Backup Proxy to Veeam M365 Backup Proxy Pool {{ veeam_backup_proxy_pool.name }}
+- name: Add second Veeam M365 Backup Proxy to existing Proxy Pool
   ansible.builtin.uri:
     url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools/{{ veeam_backup_proxy_pool_id }}/proxies'
     validate_certs: false
@@ -85,13 +85,13 @@
     headers:
       Content-Type: "application/json"
       Authorization: "Bearer {{ access_token }}"
-    status_code: [200, 201, 409, -1]
-    timeout: "200"
-  register: proxy_install_result
-  ignore_errors: false
+    status_code: [200, 201, 204, 409]  # 204 hinzufügen, -1 entfernen
+    timeout: 200
+    return_content: true
+  register: proxy_add_result
   delegate_to: localhost
-  no_log: false
   failed_when: >
-    proxy_install_result.status not in [200, 201, 409]
+    proxy_add_result.status not in [200, 201, 204, 409] or
+    (proxy_add_result.status == 409 and 'already exists' not in (proxy_add_result.json.message | default(proxy_add_result.content | default(''))))
   changed_when: >
-    proxy_install_result.status in [200, 201, -1]
+    proxy_add_result.status in [200, 201, 204]  # 204 als "changed" markieren
