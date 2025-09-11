@@ -24,49 +24,31 @@
   ansible.builtin.set_fact:
     access_token: '{{ auth_response.json.access_token }}'
 
-- name: Create Veeam M365 Backup Proxy Pool
-  block:
-    - name: Create proxy pool
-      ansible.builtin.uri:
-        url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools'
-        validate_certs: false
-        method: POST
-        body_format: json
-        body:
-          name: "{{ veeam_backup_proxy_pool.name }}"
-          description: "{{ veeam_backup_proxy_pool.description }}"
-          proxyIds:
-            - proxyId: "{{ veeam_proxy_server_uids[0] }}"
-        status_code: [200, 201, 409]
-        timeout: 200
-        headers:
-          Content-Type: "application/json"
-          Authorization: "Bearer {{ access_token }}"
-      register: proxy_install_result
-      delegate_to: localhost
-      no_log: false
-
-  rescue:
-    - name: Handle already exists error
-      ansible.builtin.debug:
-        msg: "Proxy pool already exists, continuing"
-      when: >
-        proxy_install_result.status == 409 and 
-        'already exists' in (proxy_install_result.msg | default(''))
-      changed_when: false
-
-    - name: Fail on other errors
-      ansible.builtin.fail:
-        msg: "Failed to create proxy pool: {{ proxy_install_result.msg }}"
-      when: >
-        proxy_install_result.status != 409 or 
-        'already exists' not in (proxy_install_result.msg | default(''))
-
-  always:
-    - name: Set final result
-      ansible.builtin.set_fact:
-        proxy_pool_created: "{{ proxy_install_result.status in [200, 201] }}"
-        proxy_pool_exists: "{{ proxy_install_result.status == 409 }}"
+- name: Create Veeam M365 Backup Proxy Pool on Veeam M365 Backup Server via REST API and add first proxy server
+  ansible.builtin.uri:
+    url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools'
+    validate_certs: false
+    method: POST
+    body_format: json
+    body:
+      name: "{{ veeam_backup_proxy_pool.name }}"
+      description: "{{ veeam_backup_proxy_pool.description }}"
+      proxyIds:
+        - proxyId: "{{ veeam_proxy_server_uids[0] }}"
+    status_code: [200, 201, 409]
+    timeout: 200
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ access_token }}"
+  register: proxy_install_result
+  ignore_errors: false
+  delegate_to: localhost
+  no_log: false
+  failed_when: >
+    proxy_install_result.status not in [200, 201, 409] or
+    (proxy_install_result.status == 409 and 'already exists' not in (proxy_install_result.msg | default('')))
+  changed_when: >
+    proxy_install_result.status in [200, 201]
 
 - name: Get Veeam Backup Proxy Pool UIDs from Veeam Backup Server via API
   ansible.builtin.uri:
