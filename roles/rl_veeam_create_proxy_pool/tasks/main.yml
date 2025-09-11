@@ -24,7 +24,7 @@
   ansible.builtin.set_fact:
     access_token: '{{ auth_response.json.access_token }}'
 
-- name: Install Veeam M365 Backup Proxy Pool on Veeam M365 Backup Server via REST API
+- name: Install Veeam M365 Backup Proxy Pool on Veeam M365 Backup Server via REST API and add first proxy server
   ansible.builtin.uri:
     url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools'
     validate_certs: false
@@ -34,7 +34,32 @@
       name: "{{ veeam_backup_proxy_pool.name }}"
       description: "{{ veeam_backup_proxy_pool.description }}"
       proxyIds:
-        - proxyId: "{{ veeam_proxy_server_uids[0] }}:{{ veeam_proxy_server_uids[1] }}"
+        - proxyId: "{{ veeam_proxy_server_uids[0] }}"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ access_token }}"
+    status_code: [200, 201, 409, -1]
+    timeout: "200"
+  register: proxy_install_result
+  ignore_errors: false
+  delegate_to: localhost
+  no_log: false
+  failed_when: >
+    proxy_install_result.status not in [200, 201, 409]
+  changed_when: >
+    proxy_install_result.status in [200, 201, -1]
+
+- name: Install Veeam M365 Backup Proxy Pool on Veeam M365 Backup Server via REST API and add second proxy server
+  ansible.builtin.uri:
+    url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools'
+    validate_certs: false
+    method: POST
+    body_format: json
+    body:
+      name: "{{ veeam_backup_proxy_pool.name }}"
+      description: "{{ veeam_backup_proxy_pool.description }}"
+      proxyIds:
+        - proxyId: "{{ veeam_proxy_server_uids[1] }}"
     headers:
       Content-Type: "application/json"
       Authorization: "Bearer {{ access_token }}"
