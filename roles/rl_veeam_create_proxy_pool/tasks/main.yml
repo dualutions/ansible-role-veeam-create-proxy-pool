@@ -41,7 +41,7 @@
     status_code: [200,201,409,-1]
     timeout: "200"
   register: proxy_install_result
-  ignore_errors: true
+  ignore_errors: false
   delegate_to: localhost
   no_log: false
   failed_when: >
