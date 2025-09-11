@@ -33,7 +33,7 @@
     body:
       name: "{{ veeam_backup_proxy_pool.name }}"
       description: "{{ veeam_backup_proxy_pool.description }}"
-      proxyIds: "{{ veeam_proxy_server_uids }}"
+      proxyIds: "{{ veeam_proxy_server_uids[0] }}"
     headers:
       Content-Type: "application/json"
       Authorization: "Bearer {{ access_token }}"
