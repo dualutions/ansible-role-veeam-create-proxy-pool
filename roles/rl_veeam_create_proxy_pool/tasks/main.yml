@@ -94,3 +94,47 @@
     proxy_add_result.status not in [200, 201, 204, 409] or
     (proxy_add_result.status == 409 and 'already exists' not in (proxy_add_result.json.message | default(proxy_add_result.content | default(''))))
   changed_when: proxy_add_result.status in [200, 201, 204]
+
+- name: Add third Veeam M365 Backup Proxy to existing Proxy Pool
+  ansible.builtin.uri:
+    url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools/{{ veeam_backup_proxy_pool_id }}/proxies'
+    validate_certs: false
+    method: POST
+    body_format: json
+    body:
+      - proxyId: "{{ veeam_proxy_server_uids[2] }}"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ access_token }}"
+    status_code: [200, 201, 204, 409]
+    timeout: 200
+    return_content: true
+  register: proxy_add_result
+  delegate_to: localhost
+  failed_when: >
+    proxy_add_result.status not in [200, 201, 204, 409] or
+    (proxy_add_result.status == 409 and 'already exists' not in (proxy_add_result.json.message | default(proxy_add_result.content | default(''))))
+  changed_when: proxy_add_result.status in [200, 201, 204]
+  when: veeam_proxy_server_uids | length > 2
+
+- name: Add fourth Veeam M365 Backup Proxy to existing Proxy Pool
+  ansible.builtin.uri:
+    url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools/{{ veeam_backup_proxy_pool_id }}/proxies'
+    validate_certs: false
+    method: POST
+    body_format: json
+    body:
+      - proxyId: "{{ veeam_proxy_server_uids[3] }}"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ access_token }}"
+    status_code: [200, 201, 204, 409]
+    timeout: 200
+    return_content: true
+  register: proxy_add_result
+  delegate_to: localhost
+  failed_when: >
+    proxy_add_result.status not in [200, 201, 204, 409] or
+    (proxy_add_result.status == 409 and 'already exists' not in (proxy_add_result.json.message | default(proxy_add_result.content | default(''))))
+  changed_when: proxy_add_result.status in [200, 201, 204]
+  when: veeam_proxy_server_uids | length > 3
