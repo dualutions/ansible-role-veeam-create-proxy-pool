@@ -18,11 +18,12 @@
     status_code: 200
   register: auth_response
   delegate_to: localhost
-  no_log: false
+  no_log: true
 
 - name: Set access token as a temporary fact for this playbook run
   ansible.builtin.set_fact:
     access_token: '{{ auth_response.json.access_token }}'
+  no_log: true
 
 - name: Create Veeam M365 Backup Proxy Pool on Veeam M365 Backup Server via REST API and add first proxy server
   ansible.builtin.uri:
@@ -44,7 +45,7 @@
   register: proxy_install_result
   ignore_errors: false
   delegate_to: localhost
-  no_log: false
+  no_log: true
   failed_when: >
     proxy_install_result.status not in [200, 201, 409, 500] or
     (proxy_install_result.status in [409, 500] and 
@@ -64,15 +65,12 @@
     status_code: 200
   register: veeam_get_proxy_pool_uids
   delegate_to: localhost
-  no_log: false
-
-- name: Debug veeam_get_proxy_pool_uids
-  ansible.builtin.debug:
-    var: veeam_get_proxy_pool_uids
+  no_log: true
 
 - name: Get specific proxy pool ID by name
   set_fact:
     veeam_backup_proxy_pool_id: "{{ veeam_get_proxy_pool_uids.json.results | selectattr('name', 'equalto', veeam_backup_proxy_pool.name) | map(attribute='id') | first }}"
+  no_log: true
 
 - name: Add second Veeam M365 Backup Proxy to existing Proxy Pool
   ansible.builtin.uri:
@@ -90,6 +88,7 @@
     return_content: true
   register: proxy_add_result
   delegate_to: localhost
+  no_log: true
   failed_when: >
     proxy_add_result.status not in [200, 201, 204, 409] or
     (proxy_add_result.status == 409 and 'already exists' not in (proxy_add_result.json.message | default(proxy_add_result.content | default(''))))
@@ -111,6 +110,7 @@
     return_content: true
   register: proxy_add_result
   delegate_to: localhost
+  no_log: true
   failed_when: >
     proxy_add_result.status not in [200, 201, 204, 409] or
     (proxy_add_result.status == 409 and 'already exists' not in (proxy_add_result.json.message | default(proxy_add_result.content | default(''))))
@@ -133,6 +133,7 @@
     return_content: true
   register: proxy_add_result
   delegate_to: localhost
+  no_log: true
   failed_when: >
     proxy_add_result.status not in [200, 201, 204, 409] or
     (proxy_add_result.status == 409 and 'already exists' not in (proxy_add_result.json.message | default(proxy_add_result.content | default(''))))
