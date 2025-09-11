@@ -24,7 +24,7 @@
   ansible.builtin.set_fact:
     access_token: '{{ auth_response.json.access_token }}'
 
-- name: Install Veeam Proxy Components via REST API
+- name: Install Veeam M365 Backup Proxy Pool on Veeam M365 Backup Server via REST API
   ansible.builtin.uri:
     url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools'
     validate_certs: false
