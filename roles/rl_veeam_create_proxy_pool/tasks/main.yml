@@ -34,11 +34,11 @@
       name: "{{ veeam_backup_proxy_pool.name }}"
       description: "{{ veeam_backup_proxy_pool.description }}"
       proxyIds:
-        - proxyId: "{{ veeam_proxy_server_uids }}"
+        - proxyId: '"{{ veeam_proxy_server_uids }}"'
     headers:
       Content-Type: "application/json"
       Authorization: "Bearer {{ access_token }}"
-    status_code: [200,201,409,-1]
+    status_code: [200, 201, 409, -1]
     timeout: "200"
   register: proxy_install_result
   ignore_errors: false
@@ -47,4 +47,4 @@
   failed_when: >
     proxy_install_result.status not in [200, 201, 409]
   changed_when: >
-    proxy_install_result.status in [200, 201, 409, -1]
+    proxy_install_result.status in [200, 201, -1]
