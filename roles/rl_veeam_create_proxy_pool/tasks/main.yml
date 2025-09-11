@@ -34,8 +34,7 @@
       name: "{{ veeam_backup_proxy_pool.name }}"
       description: "{{ veeam_backup_proxy_pool.description }}"
       proxyIds:
-        - proxyId: "{{ veeam_proxy_server_uids | map('community.general.dict', 'proxyId') | list }}"
-    headers:
+        - proxyId: "{{ veeam_proxy_server_uids | map('regex_replace', '^(.*)$', '{\"proxyId\":\"\\1\"}') | map('from_json') | list }}"
       Content-Type: "application/json"
       Authorization: "Bearer {{ access_token }}"
     status_code: [200, 201, 409, -1]
