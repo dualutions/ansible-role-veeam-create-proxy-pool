@@ -70,9 +70,13 @@
   ansible.builtin.debug:
     var: veeam_get_proxy_pool_uids
 
+- name: Get specific proxy pool ID by name
+  set_fact:
+    veeam_backup_proxy_pool_id: "{{ veeam_get_proxy_pool_uids.json.results | selectattr('name', 'equalto', veeam_backup_proxy_pool.name) | map(attribute='id') | first }}"
+
 - name: Add second Veeam M365 Backup Proxy to Veeam M365 Backup Proxy Pool {{ veeam_backup_proxy_pool.name }}
   ansible.builtin.uri:
-    url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools'
+    url: '{{ veeam_backup_server_api_url }}:4443/v8/proxypools/{{ veeam_backup_proxy_pool_id }}/proxies'
     validate_certs: false
     method: POST
     body_format: json
