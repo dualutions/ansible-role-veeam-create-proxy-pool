@@ -56,7 +56,7 @@
     validate_certs: false
     method: GET
     headers:
-      Authorization: 'Bearer {{ veeam_backup_server_api_access_token }}'
+      Authorization: 'Bearer {{ access_token }}'
       Accept: 'application/json'
     return_content: true
     status_code: 200
